@@ -1,0 +1,425 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#b91c1c">
+<title>理由生成メーカー</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #f7f7f7;
+  color: #222;
+  font-family: "Meiryo UI", Meiryo, sans-serif;
+}
+header {
+  background: #b91c1c;
+  color: white;
+  padding: 25px 15px;
+  text-align: center;
+}
+h1 { font-size: 24px; margin: 0 0 8px; }
+header p { font-size: 13px; margin: 0; }
+main {
+  max-width: 720px;
+  padding: 16px;
+  margin: auto;
+}
+.card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+h2 { font-size: 18px; margin: 0 0 15px; }
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  margin: 16px 0 7px;
+}
+input, select, textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  background: white;
+  border: 1px solid #bbb;
+  border-radius: 7px;
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid #b91c1c;
+}
+textarea {
+  min-height: 190px;
+  line-height: 1.7;
+  resize: vertical;
+}
+.row {
+  display: flex;
+  gap: 10px;
+}
+.row > div {
+  min-width: 0;
+  flex: 1;
+}
+button, .linkbutton {
+  display: block;
+  width: 100%;
+  border: 1px solid #b91c1c;
+  background: #b91c1c;
+  color: white;
+  border-radius: 8px;
+  padding: 14px;
+  margin: 10px 0;
+  font: inherit;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+button.secondary {
+  background: white;
+  color: #b91c1c;
+}
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.note {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.8;
+}
+.notice {
+  font-size: 13px;
+  line-height: 1.8;
+  padding: 12px;
+  background: #fff3f3;
+  border-left: 4px solid #b91c1c;
+  margin: 14px 0;
+}
+.status {
+  min-height: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #b91c1c;
+}
+footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 12px;
+  color: #777;
+}
+@media (max-width: 480px) {
+  main { padding: 10px; }
+  .card { padding: 14px; }
+  h1 { font-size: 21px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>❤️ 理由生成メーカー</h1>
+  <p>アイドルの魅力を伝える理由をChatGPTで作成</p>
+</header>
+
+<main>
+<section class="card">
+  <h2>❤️ 生成条件を入力</h2>
+
+  <label for="words">① 指定ワード</label>
+  <textarea id="words" rows="2" style="min-height:75px"
+    placeholder="例：笑顔、ダンス、努力"></textarea>
+  <p class="note">
+    複数入力する場合は「、」または「,」で区切ってください。
+  </p>
+
+  <label for="mode">② 生成モード</label>
+  <select id="mode">
+    <option value="all">すべてのワードを1つの文章に入れる</option>
+    <option value="separate">ワードごとに別々に生成する</option>
+  </select>
+
+  <div class="row">
+    <div>
+      <label for="length">③ 希望文字数</label>
+      <input type="number" id="length" min="1" max="200" value="20">
+    </div>
+    <div>
+      <label for="quantity">④ 生成数（合計）</label>
+      <input type="number" id="quantity" min="1" max="50" value="50">
+    </div>
+  </div>
+
+  <p class="note">
+    希望文字数は1〜200文字、生成数は最大50個です。
+    文字数は句読点や記号も含めて数えます。
+  </p>
+
+  <button id="makeButton" type="button">
+    ✨ プロンプトを作成
+  </button>
+</section>
+
+<section class="card">
+  <h2>📋 作成したプロンプト</h2>
+
+  <textarea id="prompt" readonly
+    placeholder="ここにChatGPTへの指示文が表示されます。"></textarea>
+
+  <p id="status" class="status" role="status"></p>
+
+  <button id="copyButton" type="button">
+    📋 プロンプトをコピー
+  </button>
+
+  <a class="linkbutton" id="chatgptButton"
+    href="https://chatgpt.com/"
+    target="_blank"
+    rel="noopener noreferrer">
+    ✨ ChatGPTを開く
+  </a>
+
+  <p class="note">
+    コピーしたプロンプトをChatGPTに貼り付けて送信してください。
+  </p>
+</section>
+
+<section class="card">
+  <h2>📊 Excel・スプレッドシート用</h2>
+
+  <p class="note">
+    生成結果を表形式で受け取りたい場合は、
+    こちらの専用プロンプトを使用してください。
+  </p>
+
+  <button class="secondary" id="sheetButton" type="button">
+    📋 表計算用プロンプトをコピー
+  </button>
+
+  <div class="notice">
+    表計算用プロンプトでは、ChatGPTにExcelファイルの作成を依頼します。
+    ファイルを直接作れない場合は、ExcelやGoogleスプレッドシートに
+    貼り付けられる表形式で回答するよう指示します。
+  </div>
+</section>
+
+<section class="card">
+  <h2>📖 使い方</h2>
+  <p class="note">
+    ① 指定ワード・文字数・生成数を入力<br>
+    ② プロンプトを作成<br>
+    ③ 通常用または表計算用プロンプトをコピー<br>
+    ④ ChatGPTを開いて貼り付ける<br>
+    ⑤ 生成された文章をコピー・保存する
+  </p>
+  <div class="notice">
+    ChatGPTが文字数を間違える場合があります。
+    プロンプトには文字数を確認・修正する指示を含めていますが、
+    完全な一致を保証するものではありません。
+  </div>
+</section>
+</main>
+
+<footer>
+  理由生成メーカー<br>
+  サイト内AI API不使用
+</footer>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+let normalPrompt = "";
+let sheetPrompt = "";
+
+function getConditions() {
+  const words = [...new Set(
+    $("words").value
+      .split(/[,、，\n]+/)
+      .map(word => word.trim())
+      .filter(Boolean)
+  )];
+
+  const length = Number($("length").value);
+  const quantity = Number($("quantity").value);
+  const mode = $("mode").value;
+
+  if (!words.length) {
+    alert("指定ワードを入力してください。");
+    return null;
+  }
+
+  if (!Number.isInteger(length) ||
+      length < 1 || length > 200) {
+    alert("希望文字数は1〜200の整数で入力してください。");
+    return null;
+  }
+
+  if (!Number.isInteger(quantity) ||
+      quantity < 1 || quantity > 50) {
+    alert("生成数は1〜50の整数で入力してください。");
+    return null;
+  }
+
+  if (mode === "separate" && quantity < words.length) {
+    alert("ワード別生成では生成数をワード数以上にしてください。");
+    return null;
+  }
+
+  if (mode === "all") {
+    const minimum = Array.from(words.join("")).length;
+    if (minimum > length) {
+      alert("すべての指定ワードを入れるには文字数が足りません。");
+      return null;
+    }
+  }
+
+  return { words, length, quantity, mode };
+}
+
+function createPrompts() {
+  const c = getConditions();
+  if (!c) return false;
+
+  const modeInstruction = c.mode === "all"
+    ? `すべての文章に次の指定ワードをすべて含めてください。
+指定ワード：${c.words.join("、")}`
+    : `指定ワードごとに別々の文章を作成してください。
+指定ワード：${c.words.join("、")}
+
+全ワード合わせて合計${c.quantity}個にしてください。
+各ワードの生成数はできるだけ均等に振り分けてください。
+各文章には、その文章に割り当てた指定ワードを必ず含めてください。`;
+
+  const common = `あなたはアイドルの魅力を伝える短文の作成アシスタントです。
+以下の条件に従って、褒め言葉・投票理由を作成してください。
+
+【指定条件】
+${modeInstruction}
+
+希望文字数：${c.length}文字
+生成数：合計${c.quantity}個
+
+【文章のルール】
+1. アイドルの魅力を肯定的に表現する。
+2. 話し言葉ではなく自然な書き言葉にする。
+3. シンプルで伝わりやすい日本語にする。
+4. すべて名詞止めにする。
+5. 文章はそれぞれ指定文字数ぴったりにする。
+6. 指定ワードを勝手に変更・省略しない。
+7. 同じ文章や似た言い回しをできるだけ避ける。
+8. 同じ語句の不自然な繰り返しや文字数合わせの水増しは禁止。
+9. 句読点・記号も1文字として数える。
+10. 生成した文章を1件ずつ実際に数え直し、文字数を確認する。
+11. 文字数が違う場合は修正してから出力する。
+12. 意味が不自然になる場合は無理に文章を作らない。
+13. 条件を満たせない場合はその旨を明示し、満たした文章だけを提示する。
+14. 説明や挨拶は不要。`;
+
+  normalPrompt = `${common}
+
+【出力形式】
+番号付きの一覧で表示してください。
+1行につき褒め言葉を1個表示してください。
+指定ワード別の場合はワードがわかるようにしてください。
+最後に生成件数を表示してください。
+文章自体には番号や文字数を含めないでください。`;
+
+  sheetPrompt = `${common}
+
+【表計算ファイルの作成】
+条件を満たした褒め言葉をExcel形式（.xlsx）で
+ダウンロードできるファイルとして作成してください。
+
+以下の列を設けてください。
+A列：No.
+B列：指定ワード
+C列：褒め言葉
+D列：文字数
+
+褒め言葉は1行につき1件としてください。
+日本語が文字化けしないようにしてください。
+ファイルの生成が可能な場合はダウンロードリンクを提示してください。
+
+もしExcelファイルを生成できない環境の場合は、
+GoogleスプレッドシートやExcelのA1セルに
+そのまま貼り付けられるタブ区切りの表を
+コードブロック内に出力してください。
+
+褒め言葉自体の文字数のみを数え、
+No.や指定ワードの列は文字数に含めないでください。`;
+
+  $("prompt").value = normalPrompt;
+  $("status").textContent = "プロンプトを作成しました！";
+  return true;
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    $("status").textContent = "コピーしました！";
+  } catch (error) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+
+    let success = false;
+    try {
+      success = document.execCommand("copy");
+    } catch (error) {
+      success = false;
+    }
+    area.remove();
+
+    if (success) {
+      $("status").textContent = "コピーしました！";
+    } else {
+      $("status").textContent =
+        "自動コピーできませんでした。入力欄から手動でコピーしてください。";
+      $("prompt").value = text;
+      $("prompt").focus();
+      $("prompt").select();
+    }
+  }
+}
+
+$("makeButton").addEventListener("click", createPrompts);
+
+$("copyButton").addEventListener("click", async () => {
+  if (!createPrompts()) return;
+  await copyText(normalPrompt);
+});
+
+$("sheetButton").addEventListener("click", async () => {
+  if (!createPrompts()) return;
+  await copyText(sheetPrompt);
+});
+
+$("words").addEventListener("input", () => {
+  normalPrompt = "";
+  sheetPrompt = "";
+  $("prompt").value = "";
+  $("status").textContent = "";
+});
+
+for (const id of ["mode", "length", "quantity"]) {
+  $(id).addEventListener("change", () => {
+    normalPrompt = "";
+    sheetPrompt = "";
+    $("prompt").value = "";
+    $("status").textContent = "";
+  });
+}
+</script>
+</body>
+</html>
